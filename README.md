@@ -4,7 +4,7 @@ Fullstack-app for å holde styr på økonomien i utleieboliger: leieinntekter, u
 
 ![Oversikten](skjermbilde.png)
 
-## Nøkkeltall
+## Kort om oppsettet
 
 | | |
 |---|---|
@@ -26,11 +26,13 @@ Spring Web og Spring Data JPA mot en filbasert H2-database. REST-API mot en fron
 * Årsrapport med sum inntekter, sum utgifter, overskudd og skatteestimat.
 * Estimert netto leieinntekt for en adresse, basert på SSBs leiemarkedsstatistikk for området.
 
-## Slik ble det bygget og verifisert
+## Bygging og testing
 
-Bygget agentisk med Claude Code. Jeg bryter ned problemet, styrer implementasjonen og går gjennom det som kommer ut.
+Claude Code skrev mesteparten av koden. Jeg styrte, og jeg kontrollerte.
 
-Verifiseringen her er gjort mot virkeligheten framfor mot testdata: dette er mitt eget regnskap, så tallene appen produserer er tall jeg kjenner fasiten på. Skatteestimatet og leieanslaget er sjekket mot faktiske beløp, og en feil i beregningen ville vært synlig for meg umiddelbart. Skattekonvensjonen ligger samlet i `SkatteUtil` nettopp fordi den ble regnet ut to steder først, og de to stedene rakk å bli uenige.
+Her hadde jeg en fordel de andre prosjektene mine ikke gir meg: dette er mitt eget regnskap. Tallene appen produserer er tall jeg kan fasiten på, så et feil skatteestimat eller et urimelig leieanslag ville vært åpenbart for meg med en gang. Det er en grundigere test enn noe jeg kunne skrevet.
+
+Skattekonvensjonen ligger samlet i `SkatteUtil` av en grunn. Den ble først regnet ut to steder, og de to stedene rakk å bli uenige før jeg oppdaget det.
 
 ## Hvorfor løsningen ser slik ut
 
