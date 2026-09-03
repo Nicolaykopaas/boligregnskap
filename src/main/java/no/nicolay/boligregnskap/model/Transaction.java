@@ -29,7 +29,7 @@ public class Transaction {
     @Column(nullable = false)
     private LocalDate date;
 
-    /** Valgfri forfallsdato — brukes til påminnelser om kommende betalinger. */
+    /** Valgfri forfallsdato, brukes til påminnelser om kommende betalinger. */
     private LocalDate dueDate;
 
     private String note;

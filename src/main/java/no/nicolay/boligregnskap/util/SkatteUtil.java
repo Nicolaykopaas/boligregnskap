@@ -9,7 +9,7 @@ public final class SkatteUtil {
 
     /**
      * Grovt estimat: 22 % skatt på positivt overskudd (utleie av sekundærbolig).
-     * NB: forenklet – ikke en faktisk skatteberegning.
+     * NB: forenklet, ikke en faktisk skatteberegning.
      */
     public static BigDecimal estimertSkatt(BigDecimal overskudd) {
         return overskudd.signum() > 0

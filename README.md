@@ -1,62 +1,48 @@
 # Boligregnskap
 
-En fullstack-webapplikasjon for å holde styr på økonomien i én eller flere utleieboliger: leieinntekter, utgifter, forfallsdatoer og en årsrapport med overskudd og skatteestimat - pluss et automatisk estimat på forventet leieinntekt for en adresse.
+Fullstack-app for å holde styr på økonomien i utleieboliger: leieinntekter, utgifter, forfallsdatoer, årsrapport med skatteestimat, og et automatisk anslag på hva en adresse burde kunne leies ut for. Bygget for å håndtere regnskapet for mine egne utleieboliger.
 
-Bygget som et personlig prosjekt for å håndtere regnskapet for egne utleieboliger.
+![Oversikten](skjermbilde.png)
 
-## Funksjonalitet
+## Nøkkeltall
 
-- Registrere flere eiendommer/adresser, hver med egne felt (boligtype, areal, rom, byggeår m.m.)
-- Registrere leieinntekter og utgifter (felleskostnader, vedlikehold, forsikring m.m.) per eiendom
-- Oversikt over kommende forfallsdatoer som påminnelse
-- Årsrapport: sum inntekter, sum utgifter, overskudd og grovt skatteestimat
-- Automatisk estimat på forventet netto leieinntekt for en adresse, basert på SSBs offentlige leiemarkedsstatistikk
-- Data lagres i database og persisteres mellom økter
+| | |
+|---|---|
+| Backend | Java 21, Spring Boot 3, 13 klasser, ca. 800 linjer |
+| Frontend | HTML, CSS og vanilla JavaScript, ingen rammeverk |
+| Eksterne API-er | 2, begge offentlige og uten nøkkel |
+| Database | H2, filbasert |
+| Kostnad å drifte | 0 kr |
 
 ## Teknologi
 
-**Backend**
-- Java 21
-- Spring Boot 3 (Spring Web, Spring Data JPA)
-- H2-database (fil-basert)
-- REST-API
-- Kartverkets adresse-API (geokoding) og SSBs PxWebApi (leiemarkedsstatistikk) - begge nøkkelfrie, offentlige API-er
+Spring Web og Spring Data JPA mot en filbasert H2-database. REST-API mot en frontend uten byggesteg. Kartverkets adresse-API for geokoding og SSBs PxWebApi for leiemarkedsstatistikk.
 
-**Frontend**
-- HTML, CSS og vanilla JavaScript
-- Kommuniserer med backend via `fetch` mot REST-API-et
+## Funksjonalitet
 
-## Arkitektur
+* Flere eiendommer, hver med boligtype, areal, rom og byggeår.
+* Inntekter og utgifter per eiendom, med kategorier som leie, felleskostnader, vedlikehold og forsikring.
+* Oversikt over kommende forfall.
+* Årsrapport med sum inntekter, sum utgifter, overskudd og skatteestimat.
+* Estimert netto leieinntekt for en adresse, basert på SSBs leiemarkedsstatistikk for området.
 
-```
-src/main/java/no/nicolay/boligregnskap/
-├── model/          Transaction, TransactionType, Eiendom, Boligtype
-├── repository/     TransactionRepository, EiendomRepository (Spring Data JPA)
-├── controller/     TransactionController, EiendomController (REST-endepunkter)
-├── service/        AdresseService (geokoding), LeieestimatService (leieprisestimat)
-├── migration/       EiendomMigrationRunner (engangs-backfill av gamle transaksjoner)
-├── util/           SkatteUtil (delt skattekonvensjon)
-└── BoligregnskapApplication.java
-src/main/resources/
-├── static/index.html   Frontend
-└── application.properties
-```
+## Slik ble det bygget og verifisert
 
-## API-endepunkter
+Bygget agentisk med Claude Code. Jeg bryter ned problemet, styrer implementasjonen og går gjennom det som kommer ut.
 
-| Metode | Endepunkt | Beskrivelse |
-|---|---|---|
-| `GET` | `/api/eiendommer` | Alle eiendommer |
-| `POST` | `/api/eiendommer` | Ny eiendom (geokodes automatisk mot Kartverket) |
-| `DELETE` | `/api/eiendommer/{id}` | Slett eiendom (409 hvis den har transaksjoner) |
-| `GET` | `/api/eiendommer/{id}/leieestimat` | Estimert brutto/netto leieinntekt for eiendommen |
-| `GET` | `/api/transactions?eiendomId=` | Transaksjoner (evt. filtrert på eiendom) |
-| `POST` | `/api/transactions?eiendomId=` | Ny transaksjon knyttet til en eiendom |
-| `DELETE` | `/api/transactions/{id}` | Slett transaksjon |
-| `GET` | `/api/transactions/upcoming?eiendomId=` | Kommende forfallsdatoer |
-| `GET` | `/api/transactions/report/{year}?eiendomId=` | Årsrapport for gitt år |
+Verifiseringen her er gjort mot virkeligheten framfor mot testdata: dette er mitt eget regnskap, så tallene appen produserer er tall jeg kjenner fasiten på. Skatteestimatet og leieanslaget er sjekket mot faktiske beløp, og en feil i beregningen ville vært synlig for meg umiddelbart. Skattekonvensjonen ligger samlet i `SkatteUtil` nettopp fordi den ble regnet ut to steder først, og de to stedene rakk å bli uenige.
 
-## Kjøre prosjektet
+## Hvorfor løsningen ser slik ut
+
+**Filbasert H2 framfor PostgreSQL.** Én bruker og ett datasett. En databaseserver ville lagt til drift uten å løse noe.
+
+**Vanilla JavaScript framfor React.** Frontend er én side med et skjema og noen tabeller. Et rammeverk ville betydd byggesteg og avhengigheter for noe som fungerer uten.
+
+**Kartverket og SSB framfor betalte tjenester.** Begge er offentlige, gratis og krever ingen nøkkel. Leieanslaget blir mindre presist enn en kommersiell takst, men det er godt nok til å svare på om leien ligger omtrent riktig.
+
+**Egen migrasjonsrutine.** Da støtte for flere eiendommer kom til, måtte gamle transaksjoner uten eiendom kobles til en. `EiendomMigrationRunner` gjør det én gang ved oppstart, i stedet for at koden må håndtere transaksjoner uten eier for alltid.
+
+## Kjøre det
 
 Krever Java 21 og Maven.
 
@@ -64,21 +50,4 @@ Krever Java 21 og Maven.
 mvn spring-boot:run
 ```
 
-Eller dobbeltklikk `run.bat` (rydder selv opp gamle prosesser på port 8080 og åpner nettleseren automatisk).
-
-Åpne deretter `http://localhost:8080` i nettleseren.
-
-## Merknad om leieestimatet
-
-Leieestimatet er basert på SSBs leiemarkedsundersøkelse (gjennomsnittlig leie per kvadratmeter for en sone: Oslo/Bærum, Bergen, Trondheim, Stavanger, Akershus for øvrig, eller hele landet) og antall rom - det er et regionalt/nasjonalt snitt, ikke et adressespesifikt tall. Automatisert uthenting fra Finn.no er bevisst unngått, siden dette er i strid med Finns brukervilkår.
-
-## Videre arbeid
-
-- Innlogging
-- Grafisk visning av inntekter/utgifter over tid
-- Eksport av årsrapport til PDF
-- Enhetstester av rapport-, skatte- og leieestimatberegning
-
-## Merknad om skatteberegning
-
-Skatteestimatet er en forenklet beregning (22 % av positivt overskudd) og er ikke en offisiell eller nøyaktig skatteberegning. Bruk Skatteetatens egne verktøy for faktisk skattemelding.
+Appen ligger på `http://localhost:8080`.
