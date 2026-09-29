@@ -6,3 +6,5 @@ services:
     envVars:
       - key: SPRING_H2_CONSOLE_ENABLED
         value: "false"
+      - key: SPRING_PROFILES_ACTIVE
+        value: "demo"
